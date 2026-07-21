@@ -1,0 +1,28 @@
+💳 Preguntas sobre Métodos de Pago
+
+    "¿Cuáles son los métodos de pago disponibles en NovaShop?"
+
+    "¿Aceptan tarjetas de crédito o pagos por Nequi / PSE?"
+
+    "¿Puedo pagar contra entrega?"
+
+📦 Preguntas sobre Envíos y Tiempos de Entrega
+
+    "¿Cuánto se demora en llegar un pedido a Bogotá / Medellín / Cali?"
+
+    "¿Cuál es el costo del envío para compras menores a cierto valor?"
+
+    "¿Hacen envíos a todo el territorio nacional en Colombia?"
+
+🔄 Preguntas sobre Cambios, Devoluciones y Garantía
+    "¿Cuál es la política de devoluciones o cambios de prendas?"
+
+    "¿Cuántos días tengo para solicitar una garantía si la ropa sale defectuosa?"
+
+    "¿Quién asume el costo del envío en caso de un cambio por talla?"
+
+🛑 Pruebas de Límites (Para verificar que no invente información)
+
+    "¿Venden computadores o celulares?"
+
+    "¿Tienen tiendas físicas en Europa?"
