@@ -119,8 +119,12 @@ if prompt := st.chat_input("Escribe tu consulta aquí..."):
                     "messages": mensajes_ollama,
                     "stream": False
                 }
+                headers = {
+    "ngrok-skip-browser-warning": "true",
+    "User-Agent": "StreamlitApp"
+                }
+                response = requests.post(url, json=payload, headers=headers, timeout=60)
                 
-                response = requests.post(url, json=payload, timeout=60)
                 
                 if response.status_code == 200:
                     bot_response = response.json()["message"]["content"]
