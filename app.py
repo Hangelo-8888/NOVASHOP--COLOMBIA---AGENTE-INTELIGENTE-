@@ -114,7 +114,7 @@ if prompt := st.chat_input("Escribe tu consulta aquí..."):
             try:
                 url = f"{OLLAMA_HOST.rstrip('/')}/api/chat"
                 payload = {
-                    "model": "llama3.2",
+                    "model": "llama3.2:latest",
                     "messages": mensajes_ollama,
                     "stream": False
                 }
