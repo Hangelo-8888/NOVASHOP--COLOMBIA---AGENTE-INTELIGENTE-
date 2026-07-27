@@ -98,7 +98,7 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 # ---------------------------------------------------------
-# 6. Petición HTTP a Ollama
+# 6. Petición HTTP a Ollama con bypass de Ngrok
 # ---------------------------------------------------------
 if prompt := st.chat_input("Escribe tu consulta aquí..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -112,19 +112,20 @@ if prompt := st.chat_input("Escribe tu consulta aquí..."):
     with st.chat_message("assistant", avatar="🤖"):
         with st.spinner("J.A.R.V.I.S. está pensando..."):
             try:
-                # Se llama directamente a la API HTTP de Ollama
                 url = f"{OLLAMA_HOST.rstrip('/')}/api/chat"
                 payload = {
                     "model": "llama3.2",
                     "messages": mensajes_ollama,
                     "stream": False
                 }
-                headers = {
-    "ngrok-skip-browser-warning": "true",
-    "User-Agent": "StreamlitApp"
-                }
-                response = requests.post(url, json=payload, headers=headers, timeout=60)
                 
+                # Encabezados clave para saltar el error 403 y la advertencia de Ngrok
+                headers = {
+                    "ngrok-skip-browser-warning": "69420",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                }
+                
+                response = requests.post(url, json=payload, headers=headers, timeout=60)
                 
                 if response.status_code == 200:
                     bot_response = response.json()["message"]["content"]
