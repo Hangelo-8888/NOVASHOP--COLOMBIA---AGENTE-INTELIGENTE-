@@ -1,5 +1,5 @@
 import os
-import requests
+from groq import Groq
 import streamlit as st
 from pypdf import PdfReader
 
@@ -10,11 +10,13 @@ st.set_page_config(
     page_title="J.A.R.V.I.S. - NovaShop Colombia",
     page_icon="🤖",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
-# Servidor de Ollama
-OLLAMA_HOST = st.secrets.get("OLLAMA_HOST", "http://localhost:11434")
+# Configuración del Cliente de Groq
+GROQ_API_KEY = st.secrets.get("GROQ_API_KEY", os.environ.get("GROQ_API_KEY"))
+client = Groq(api_key=GROQ_API_KEY)
+
 
 # ---------------------------------------------------------
 # 2. Carga del Manual de Soporte (PDF)
@@ -34,6 +36,7 @@ def cargar_manual(ruta_pdf):
     except Exception:
         return None
 
+
 PDF_NOMBRE = "manual_soporte_clientes.pdf"
 texto_manual = cargar_manual(PDF_NOMBRE)
 
@@ -41,12 +44,14 @@ texto_manual = cargar_manual(PDF_NOMBRE)
 # 3. Barra Lateral (Sidebar)
 # ---------------------------------------------------------
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/4712/4712035.png", width=90)
+    st.image(
+        "https://cdn-icons-png.flaticon.com/512/4712/4712035.png", width=90
+    )
     st.title("🤖 J.A.R.V.I.S.")
-    st.markdown("**Estado:** 🟢 Conectado (Ollama)")
-    st.markdown("**Modelo:** `llama3.2`")
+    st.markdown("**Estado:** 🟢 Conectado (Groq Cloud)")
+    st.markdown("**Modelo:** `llama-3.3-70b-versatile`")
     st.markdown("---")
-    
+
     st.markdown("### 💡 Preguntas de Prueba")
     st.caption("Prueba copiando estas consultas:")
     st.markdown("""
@@ -55,7 +60,7 @@ with st.sidebar:
     - *¿Cuál es la política de devoluciones?*
     """)
     st.markdown("---")
-    
+
     if st.button("🗑️ Limpiar Conversación"):
         st.session_state.messages = []
         st.rerun()
@@ -65,7 +70,10 @@ with st.sidebar:
 # ---------------------------------------------------------
 st.title("🤖 J.A.R.V.I.S. - NovaShop Colombia")
 st.subheader("Asistente Virtual de Soporte y Atención al Cliente")
-st.markdown("¡Hola! Soy J.A.R.V.I.S. Puedo ayudarte con dudas sobre métodos de pago, envíos y soporte general.")
+st.markdown(
+    "¡Hola! Soy J.A.R.V.I.S. Puedo ayudarte con dudas sobre métodos de pago,"
+    " envíos y soporte general."
+)
 st.markdown("---")
 
 # ---------------------------------------------------------
@@ -88,9 +96,12 @@ REGLAS DE RESPUESTA:
 
 # Historial de Chat
 if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "assistant", "content": "¡Hola! Bienvenido a NovaShop Colombia. ¿En qué puedo ayudarte hoy?"}
-    ]
+    st.session_state.messages = [{
+        "role": "assistant",
+        "content": (
+            "¡Hola! Bienvenido a NovaShop Colombia. ¿En qué puedo ayudarte hoy?"
+        ),
+    }]
 
 for message in st.session_state.messages:
     avatar = "🤖" if message["role"] == "assistant" else "👤"
@@ -98,43 +109,36 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 # ---------------------------------------------------------
-# 6. Petición HTTP a Ollama con bypass de Ngrok
+# 6. Petición a la API de Groq
 # ---------------------------------------------------------
 if prompt := st.chat_input("Escribe tu consulta aquí..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="👤"):
         st.markdown(prompt)
 
-    mensajes_ollama = [{"role": "system", "content": SYSTEM_PROMPT}]
+    # Estructuramos los mensajes incluyendo el SYSTEM_PROMPT al inicio
+    mensajes_groq = [{"role": "system", "content": SYSTEM_PROMPT}]
     for msg in st.session_state.messages:
-        mensajes_ollama.append({"role": msg["role"], "content": msg["content"]})
+        mensajes_groq.append({"role": msg["role"], "content": msg["content"]})
 
     with st.chat_message("assistant", avatar="🤖"):
         with st.spinner("J.A.R.V.I.S. está pensando..."):
             try:
-                url = f"{OLLAMA_HOST.rstrip('/')}/api/chat"
-                payload = {
-                    "model": "llama3.2:latest",
-                    "messages": mensajes_ollama,
-                    "stream": False
-                }
-                
-                # Se utiliza requests.Session() para evitar el error 403 de Ngrok
-                session = requests.Session()
-                session.headers.update({
-                    "ngrok-skip-browser-warning": "69420",
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-                })
-                
-                response = session.post(url, json=payload, timeout=60)
-                
-                if response.status_code == 200:
-                    bot_response = response.json()["message"]["content"]
-                    st.markdown(bot_response)
-                    st.session_state.messages.append({"role": "assistant", "content": bot_response})
-                else:
-                    st.error(f"Error en el servidor de Ollama (Código {response.status_code})")
-                    
+                # Consulta ultra rápida a Groq Cloud
+                chat_completion = client.chat.completions.create(
+                    messages=mensajes_groq,
+                    model="llama-3.3-70b-versatile",  # El modelo más potente y rápido actualmente en Groq
+                    temperature=0.5,
+                    max_tokens=500,
+                )
+
+                bot_response = chat_completion.choices[0].message.content
+
+                st.markdown(bot_response)
+                st.session_state.messages.append(
+                    {"role": "assistant", "content": bot_response}
+                )
+
             except Exception as e:
-                st.error("No se pudo conectar con el servidor de Ollama.")
-                st.info("Si estás ejecutando en la nube, verifica que la URL en Secrets (OLLAMA_HOST) esté activa.")
+                st.error("No se pudo conectar con el servidor de Groq.")
+                st.info(f"Detalle del error: {e}")
